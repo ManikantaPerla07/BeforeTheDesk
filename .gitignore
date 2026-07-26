@@ -2,10 +2,16 @@
 
 __pycache__/
 
-
 *.csv
 
 *.log
 
 *.safetensors
 *.pkl
+
+# Virtual Environment
+venv/
+.env
+
+# Python cache
+*.py[cod]
