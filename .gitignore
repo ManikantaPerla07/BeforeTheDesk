@@ -15,3 +15,5 @@ venv/
 
 # Python cache
 *.py[cod]
+*.pyc
+backend/logs/
