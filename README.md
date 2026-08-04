@@ -100,3 +100,23 @@ The app opens at `http://localhost:8501`.
 - The first run downloads the Sentence Transformer model (~80 MB). It's cached afterwards.
 - If you don't have a Groq key yet, the scoring still works — only the LLM suggestions section will be empty.
 - `jupyter notebooks/` and `ml model/` are for experimentation and aren't required to run the app.
+
+## Deployment
+
+The backend is already configured for Render through [render.yaml](render.yaml). The frontend can be deployed separately as a Streamlit app or as another web service.
+
+Use these environment variables in production:
+
+- `SUPABASE_URL`, `SUPABASE_KEY`, `SUPABASE_ANON_KEY`, `SUPABASE_JWT_SECRET`
+- `GROQ_API_KEY`
+- `BACKEND_URL` for the Streamlit frontend, pointing to the deployed API URL
+- `ALLOWED_ORIGINS` for the backend CORS allowlist, including your deployed frontend URL
+- `AUTH_REDIRECT_URL` for Google OAuth redirects
+
+Recommended deployment flow:
+
+1. Deploy the backend first and note its public URL.
+2. Set `BACKEND_URL` in the frontend to that URL.
+3. Set `ALLOWED_ORIGINS` on the backend to the frontend domain.
+4. Configure Supabase and Groq secrets in the target platform.
+5. If you use Google OAuth, update the redirect URL in Supabase and `AUTH_REDIRECT_URL` to match the deployed frontend.
