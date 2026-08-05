@@ -13,14 +13,29 @@ from rapidfuzz import fuzz
 
 
 def calculate_semantic_similarity(
-    resume_text: str, jd_text: str, embedder: SentenceTransformer
+    resume_text: str,
+    jd_text: str,
+    embedder: SentenceTransformer,
 ) -> float:
-    resume_emb = embedder.encode(resume_text[:5000], convert_to_tensor=False)
-    jd_emb     = embedder.encode(jd_text[:5000], convert_to_tensor=False)
+
+    # If the embedding model isn't available, skip semantic matching.
+    if embedder is None:
+        return 0.0
+
+    resume_emb = embedder.encode(
+        resume_text[:5000],
+        convert_to_tensor=False,
+    )
+
+    jd_emb = embedder.encode(
+        jd_text[:5000],
+        convert_to_tensor=False,
+    )
 
     similarity = np.dot(resume_emb, jd_emb) / (
         np.linalg.norm(resume_emb) * np.linalg.norm(jd_emb)
     )
+
     return float(np.clip(similarity, 0.0, 1.0))
 
 
@@ -38,15 +53,21 @@ def identify_missing_keywords(
     result = fuzzy_match_keywords(resume_keywords, jd_keywords, threshold=80)
     return result['missing'][:top_n]
 
-
 def analyze_skills_gap(
-    resume_skills: List[str], jd_text: str, nlp: spacy.Language
+    resume_skills: List[str],
+    jd_text: str,
+    nlp: spacy.Language,
 ) -> List[str]:
-    doc       = nlp(jd_text[:5000])
+
+    if nlp is None:
+        return []
+
+    doc = nlp(jd_text[:5000])
+
     jd_skills = set()
 
     for ent in doc.ents:
-        if ent.label_ in ['PRODUCT', 'ORG', 'LANGUAGE']:
+        if ent.label_ in ["PRODUCT", "ORG", "LANGUAGE"]:
             jd_skills.add(ent.text.lower())
 
     for chunk in doc.noun_chunks:
@@ -54,22 +75,21 @@ def analyze_skills_gap(
         if 1 <= len(ct.split()) <= 4:
             jd_skills.add(ct)
 
-    # Normalize resume skills for comparison
     resume_normalized = {normalize_skill(s) for s in resume_skills}
 
     gap = []
+
     for jd_skill in jd_skills:
         jd_norm = normalize_skill(jd_skill)
 
-        # Check canonical match first
         if jd_norm in resume_normalized:
             continue
 
-        # Then try fuzzy match against all resume skills
         best_score = max(
             (fuzz.token_sort_ratio(jd_norm, rs) for rs in resume_normalized),
             default=0,
         )
+
         if best_score < 75:
             gap.append(jd_skill)
 
