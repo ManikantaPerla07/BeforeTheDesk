@@ -90,9 +90,14 @@ async def get_user_history(user_id: str) -> List[Dict]:
                     "analysis_result": doc.get("analysis_result", {}),
                 })
             return results
+    except httpx.HTTPStatusError as exc:
+        logger.error(f"Status: {exc.response.status_code}")
+        logger.error(f"Body: {exc.response.text}")
+        return None
+
     except Exception as exc:
-        logger.error(f"Failed to fetch history from Supabase: {exc}")
-        return []
+        logger.exception("Failed to save analysis")
+        return None     
 
 async def delete_analysis(analysis_id: str, user_id: str) -> bool:
     headers = _get_headers()
