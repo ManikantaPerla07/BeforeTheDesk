@@ -96,8 +96,8 @@ async def get_user_history(user_id: str) -> List[Dict]:
         return None
 
     except Exception as exc:
-        logger.exception("Failed to save analysis")
-        return None     
+        logger.exception(exc)
+        return None
 
 async def delete_analysis(analysis_id: str, user_id: str) -> bool:
     headers = _get_headers()
